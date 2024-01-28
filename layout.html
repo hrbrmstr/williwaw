@@ -113,7 +113,6 @@
       }
       
       getSVG(id) {
-        // Assuming svgtrans is a global object with SVG strings
         const svgString = svgtrans[ id ];
         const template = document.createElement('template');
         template.innerHTML = svgString;
