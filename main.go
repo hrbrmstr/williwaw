@@ -50,6 +50,17 @@ func Format(n int64) string {
 	}
 }
 
+func DegToCompass(deg float64) string {
+	var directions = []string{"N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"}
+	ix := int((deg + 22.5) / 45)
+	if ix < 0 {
+		ix = 0
+	} else if ix >= len(directions) {
+		ix = len(directions) - 1
+	}
+	return directions[ix]
+}
+
 func NewWxIndex(pubsub pubsub.Adapter) *index {
 	c := &index{
 		model:       &App{},
@@ -116,6 +127,10 @@ func (i *index) load(ctx fir.RouteContext) error {
 		"humid": "⌛️",
 		"lumos": "⌛️",
 		"press": "⌛️",
+		"insol": "⌛️",
+		"ultra": "⌛️",
+		"wind":  "⌛️",
+		"wdir":  "⌛️",
 		"when":  "⌛️",
 	})
 }
@@ -131,10 +146,14 @@ func (i *index) updated(ctx fir.RouteContext) error {
 	return ctx.Data(map[string]any{
 		"hub":   reading.HubSn,
 		"batt":  fmt.Sprintf("%.1f volts", reading.Obs[0][16]),
-		"temp":  fmt.Sprintf("%.1f°F", reading.Obs[0][7]*1.8+32),
+		"temp":  fmt.Sprintf("%.1f<span style='vertical-align: super; font-size: smaller;'>°F</span>", reading.Obs[0][7]*1.8+32),
 		"humid": fmt.Sprintf("%.1f%%", reading.Obs[0][8]),
 		"lumos": Format(int64(reading.Obs[0][9])),
-		"press": Format(int64(reading.Obs[0][6])) + "mb",
+		"press": Format(int64(reading.Obs[0][6])) + "<span style='font-size:smaller'> mb</span>",
+		"insol": Format(int64(reading.Obs[0][11])) + "<span style='font-size:smaller'> W/m^2</span>",
+		"ultra": Format(int64(reading.Obs[0][10])),
+		"wind":  fmt.Sprintf("%.1f<span style='font-size:smaller'> mph</span>", reading.Obs[0][2]*2.236936),
+		"wdir":  DegToCompass(reading.Obs[0][4]),
 		"when":  time.Now().Format("2006-01-02 15:04:05"),
 	})
 }
