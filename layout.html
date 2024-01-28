@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ .app_name }}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Wx station" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/@livefir/fir@latest/dist/fir.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: sans-serif;
+    }
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px; /* This creates the margins between boxes */
+      padding: 20px; /* This creates padding around the container */
+      width: 90vw; /* This makes the container fill 90% of the viewport width */
+      max-width: 1200px; /* This sets a maximum width for the container */
+    }
+    .flex-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 140px; /* Set the height of the boxes */
+      width: 140px; /* Set the width of the boxes */
+      border: 1px solid white;
+      border-radius: 6%;
+    }
+    .flex-item p {
+      text-align: center;
+      font-size: 1.5rem;
+      font-family: 'Space Mono', monospace
+    }
+    .status-bar {
+      position: fixed;  /* Makes the div stay in place */
+      bottom: 0;        /* Aligns the div to the bottom of the window */
+      left: 0;          /* Aligns the div to the left of the window */
+      width: 100%;      /* Ensures the div spans the full width of the window */
+      height: 50px;     /* Adjust the height as needed */
+      text-align: center; /* Centers the text inside the status bar */
+      line-height: 50px; /* Vertically centers the text (should match height) */
+      z-index: 1000;    /* Ensures the status bar is above other elements */
+      padding-bottom: 10px;
+      font-family: 'Space Mono', monospace;
+    }
+    @media (prefers-color-scheme: light) {
+     .flex-item {
+        border: 1px solid black;
+      }
+    }
+    svg {
+      padding-right: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  {{ template "content" . }}
+</body>
+</html>
