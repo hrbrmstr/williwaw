@@ -1,5 +1,13 @@
 # Self-contained HTML Weatherflow Tempest Readings Display
 
+## TODO
+
+- [ ] Handle other Tempest UDP events
+- [ ] Preferences form/route
+- [ ] SQLite data logger option
+  - [ ] Charts
+  - [ ] Data export
+
 ## Build
 
 ```bash
@@ -15,6 +23,8 @@ On interrupt/control-c, the program cleans up after itself, but you can also ter
 ```bash
 $ SEEKRIT_TOKEN=something-you-make-up ./gofir
 ```
+
+If you don't set `SEEKRIT_TOKEN` the `/quit` route will not be set up.
 
 ## WAT
 

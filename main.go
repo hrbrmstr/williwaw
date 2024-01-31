@@ -184,10 +184,6 @@ func initUDPListener() {
 }
 
 func main() {
-	if os.Getenv("SEEKRIT_TOKEN") == "" {
-		fmt.Println("SEEKRIT_TOKEN environment variable not set")
-		os.Exit(1)
-	}
 
 	initUDPListener()
 	defer conn.Close()
@@ -202,17 +198,19 @@ func main() {
 
 	http.Handle("/", controller.Route(NewWxIndex(pubsubAdapter)))
 
-	http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
-		token := r.URL.Query().Get("token")
-		secretToken := os.Getenv("SEEKRIT_TOKEN")
+	if os.Getenv("SEEKRIT_TOKEN") == "" {
+		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
+			token := r.URL.Query().Get("token")
+			secretToken := os.Getenv("SEEKRIT_TOKEN")
 
-		if token == secretToken {
-			conn.Close()
-			os.Exit(0)
-		} else {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		}
-	})
+			if token == secretToken {
+				conn.Close()
+				os.Exit(0)
+			} else {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			}
+		})
+	}
 
 	http.ListenAndServe("0.0.0.0:9867", nil)
 }
