@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
 	"sync"
 	"time"
@@ -24,6 +26,16 @@ type ObsSt struct {
 type App struct {
 	sync.RWMutex
 }
+
+type index struct {
+	model       *App
+	pubsub      pubsub.Adapter
+	eventSender chan fir.Event
+	id          string
+}
+
+var conn *net.UDPConn
+var lastReading ObsSt
 
 func Format(n int64) string {
 	in := strconv.FormatInt(n, 10)
@@ -70,11 +82,6 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 	}
 
 	go func() {
-
-		addr, _ := net.ResolveUDPAddr("udp", ":50222")
-		conn, _ := net.ListenUDP("udp", addr)
-		defer conn.Close()
-
 		buf := make([]byte, 1024)
 		var obsInstance ObsSt
 
@@ -89,6 +96,7 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 				if ttype == "obs_st" {
 
 					json.Unmarshal(data, &obsInstance)
+					lastReading = obsInstance
 
 					c.eventSender <- fir.NewEvent("updated", obsInstance)
 
@@ -98,13 +106,6 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 	}()
 
 	return c
-}
-
-type index struct {
-	model       *App
-	pubsub      pubsub.Adapter
-	eventSender chan fir.Event
-	id          string
 }
 
 func (i *index) Options() fir.RouteOptions {
@@ -118,23 +119,44 @@ func (i *index) Options() fir.RouteOptions {
 	}
 }
 
-func (i *index) load(ctx fir.RouteContext) error {
-	fmt.Println(ctx)
-	return ctx.Data(map[string]any{
-		"hub":   "⌛️",
-		"batt":  "⌛️",
-		"temp":  "⌛️",
-		"humid": "⌛️",
-		"lumos": "⌛️",
-		"press": "⌛️",
-		"insol": "⌛️",
-		"ultra": "⌛️",
-		"wind":  "⌛️",
-		"wdir":  "⌛️",
-		"when":  "⌛️",
-	})
+func formatReading(reading ObsSt) map[string]any {
+	if reading.FirmwareRevision == 0 {
+		return map[string]any{
+			"hub":   "⌛️",
+			"batt":  "⌛️",
+			"temp":  "⌛️",
+			"humid": "⌛️",
+			"lumos": "⌛️",
+			"press": "⌛️",
+			"insol": "⌛️",
+			"ultra": "⌛️",
+			"wind":  "⌛️",
+			"wdir":  "⌛️",
+			"when":  "⌛️",
+		}
+	} else {
+		return map[string]any{
+			"hub":   reading.HubSn,
+			"batt":  fmt.Sprintf("%.1f volts", reading.Obs[0][16]),
+			"temp":  fmt.Sprintf("%.1f<span style='vertical-align: super; font-size: 9pt;'>°F</span>", reading.Obs[0][7]*1.8+32),
+			"humid": fmt.Sprintf("%.1f%%", lastReading.Obs[0][8]),
+			"lumos": Format(int64(reading.Obs[0][9])),
+			"press": Format(int64(reading.Obs[0][6])) + "<span style='font-size:9pt'> mb</span>",
+			"insol": Format(int64(reading.Obs[0][11])) + "<span style='font-size:9pt'> W/m^2</span>",
+			"ultra": Format(int64(reading.Obs[0][10])),
+			"wind":  fmt.Sprintf("%.1f<span style='font-size:9pt'> mph</span>", reading.Obs[0][2]*2.236936),
+			"wdir":  DegToCompass(reading.Obs[0][4]),
+			"when":  time.Now().Format("2006-01-02 15:04:05"),
+		}
+	}
 }
 
+// load is called when the page is loaded.
+func (i *index) load(ctx fir.RouteContext) error {
+	return ctx.Data(formatReading(lastReading))
+}
+
+// updated is called when the "updated" event is received.
 func (i *index) updated(ctx fir.RouteContext) error {
 	reading := &ObsSt{}
 
@@ -143,24 +165,54 @@ func (i *index) updated(ctx fir.RouteContext) error {
 		return err
 	}
 
-	return ctx.Data(map[string]any{
-		"hub":   reading.HubSn,
-		"batt":  fmt.Sprintf("%.1f volts", reading.Obs[0][16]),
-		"temp":  fmt.Sprintf("%.1f<span style='vertical-align: super; font-size: 9pt;'>°F</span>", reading.Obs[0][7]*1.8+32),
-		"humid": fmt.Sprintf("%.1f%%", reading.Obs[0][8]),
-		"lumos": Format(int64(reading.Obs[0][9])),
-		"press": Format(int64(reading.Obs[0][6])) + "<span style='font-size:9pt'> mb</span>",
-		"insol": Format(int64(reading.Obs[0][11])) + "<span style='font-size:9pt'> W/m^2</span>",
-		"ultra": Format(int64(reading.Obs[0][10])),
-		"wind":  fmt.Sprintf("%.1f<span style='font-size:9pt'> mph</span>", reading.Obs[0][2]*2.236936),
-		"wdir":  DegToCompass(reading.Obs[0][4]),
-		"when":  time.Now().Format("2006-01-02 15:04:05"),
-	})
+	return ctx.Data(formatReading(*reading))
+}
+
+// initUDPListener creates a UDP listener on port 50222.
+func initUDPListener() {
+	addr, _ := net.ResolveUDPAddr("udp", ":50222")
+	conn, _ = net.ListenUDP("udp", addr)
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		<-c
+		conn.Close()
+		os.Exit(0)
+	}()
 }
 
 func main() {
+	if os.Getenv("SEEKRIT_TOKEN") == "" {
+		fmt.Println("SEEKRIT_TOKEN environment variable not set")
+		os.Exit(1)
+	}
+
+	initUDPListener()
+	defer conn.Close()
+
 	pubsubAdapter := pubsub.NewInmem()
-	controller := fir.NewController("wx-app", fir.DevelopmentMode(false), fir.WithPubsubAdapter(pubsubAdapter))
+
+	controller := fir.NewController(
+		"wx-app",
+		fir.DevelopmentMode(false),
+		fir.WithPubsubAdapter(pubsubAdapter),
+	)
+
 	http.Handle("/", controller.Route(NewWxIndex(pubsubAdapter)))
+
+	http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
+		token := r.URL.Query().Get("token")
+		secretToken := os.Getenv("SEEKRIT_TOKEN")
+
+		if token == secretToken {
+			conn.Close()
+			os.Exit(0)
+		} else {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		}
+	})
+
 	http.ListenAndServe("0.0.0.0:9867", nil)
 }
