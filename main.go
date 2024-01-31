@@ -36,6 +36,7 @@ type index struct {
 
 var conn *net.UDPConn
 var lastReading ObsSt
+var tempUnits string = "Celsius"
 
 func Format(n int64) string {
 	in := strconv.FormatInt(n, 10)
@@ -119,6 +120,30 @@ func (i *index) Options() fir.RouteOptions {
 	}
 }
 
+func ternary[T any](condition bool, trueVal, falseVal T) T {
+	if condition {
+		return trueVal
+	}
+	return falseVal
+}
+
+func prefsLoad(ctx fir.RouteContext) error {
+	return ctx.Data(
+		map[string]any{
+			"fSel": ternary(tempUnits == "Fahrenheit", "selected", ""),
+			"cSel": ternary(tempUnits == "Celsius", "selected", ""),
+		},
+	)
+}
+
+func prefs() fir.RouteOptions {
+	return fir.RouteOptions{
+		fir.ID("prefs"),
+		fir.Content("./prefs/prefs.html"),
+		fir.OnLoad(prefsLoad),
+	}
+}
+
 func formatReading(reading ObsSt) map[string]any {
 	if reading.FirmwareRevision == 0 {
 		return map[string]any{
@@ -184,11 +209,6 @@ func initUDPListener() {
 }
 
 func main() {
-	if os.Getenv("SEEKRIT_TOKEN") == "" {
-		fmt.Println("SEEKRIT_TOKEN environment variable not set")
-		os.Exit(1)
-	}
-
 	initUDPListener()
 	defer conn.Close()
 
@@ -196,23 +216,27 @@ func main() {
 
 	controller := fir.NewController(
 		"wx-app",
-		fir.DevelopmentMode(false),
+		fir.DevelopmentMode(true),
 		fir.WithPubsubAdapter(pubsubAdapter),
 	)
 
 	http.Handle("/", controller.Route(NewWxIndex(pubsubAdapter)))
 
-	http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
-		token := r.URL.Query().Get("token")
-		secretToken := os.Getenv("SEEKRIT_TOKEN")
+	http.Handle("/prefs", controller.RouteFunc(prefs))
 
-		if token == secretToken {
-			conn.Close()
-			os.Exit(0)
-		} else {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		}
-	})
+	if os.Getenv("SEEKRIT_TOKEN") != "" {
+		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
+			token := r.URL.Query().Get("token")
+			secretToken := os.Getenv("SEEKRIT_TOKEN")
+
+			if token == secretToken {
+				conn.Close()
+				os.Exit(0)
+			} else {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			}
+		})
+	}
 
 	http.ListenAndServe("0.0.0.0:9867", nil)
 }

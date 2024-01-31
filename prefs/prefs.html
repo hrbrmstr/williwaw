@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>{{ .app_name }}</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Wx station" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/@livefir/fir@latest/dist/fir.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <a href="/">Back</a>
+  {{ block "prefs-update" . }}
+  <div x-data @fir::prefs-update="$fir.replace()">
+    <form method="post" id="updatePres" action="/?event=updatePrefs" @fir:[updatePrefs:pending,updatePrefs:ok,updatePrefs:error]="toggle"
+      @submit.prevent="$fir.submit()">
+      <div id="tempField" @fir:updatePrefs:ok::title="$fir.replace()"
+
+    <label for="temp">Temperature units:</label>
+    <select id="temp">
+    <option value="Fahrenheit" {{ .fSel }}>Fahrenheit</option>
+    <option value="Celsius" {{ .cSel }}>Celsius</option>
+    </select>
+    </form>
+  </div>
+  {{ end }}
+</body>
+</html> 
