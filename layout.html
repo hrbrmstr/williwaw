@@ -121,7 +121,7 @@
       render() {
         console.log(window.location.href)
         return html`
-<p>📡 ${this.hub} • 🔋 ${this.batt} • 🕑 ${this.when} • <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">⚙️</a></p>
+<p>📡 ${this.hub} • 🔋 ${this.batt} • 🕑 ${this.when} • <a class="gear" href="${this.path}">⚙️</a></p>
 `
       }
     }
