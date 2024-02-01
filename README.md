@@ -1,9 +1,12 @@
 # Self-contained HTML Weatherflow Tempest Readings Display
 
+![](imgs/arc.png)
+
 ## TODO
 
 - [ ] Handle other Tempest UDP events
-- [ ] Preferences form/route
+- [X] Preferences form/route
+- [X] Handle most UI value formatting in HTML/JS
 - [ ] SQLite data logger option
   - [ ] Charts
   - [ ] Data export
@@ -43,6 +46,8 @@ It uses:
 
 {fir} is pretty neat! It uses websockets for comms and only updates the portions of the web page that have data changes.
 
+Arc (dark mode) is shown up top. I'll take new captures of these (below) eventually.
+
 **Windows** (tablet/Chrome)
 
 ![](imgs/tablet.png)
@@ -50,10 +55,6 @@ It uses:
 **iOS**
 
 ![](imgs/iphone.jpg)
-
-**Arc** (dark mode)
-
-![](imgs/arc.png)
 
 **Safari** (light mode)
 

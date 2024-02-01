@@ -119,6 +119,16 @@ func (i *index) Options() fir.RouteOptions {
 	}
 }
 
+func prefs() fir.RouteOptions {
+	return fir.RouteOptions{
+		fir.ID("prefs"),
+		fir.Content("prefs.html"),
+		fir.OnLoad(func(ctx fir.RouteContext) error {
+			return ctx.Data(map[string]any{})
+		}),
+	}
+}
+
 func formatReading(reading ObsSt) map[string]any {
 	if reading.FirmwareRevision == 0 {
 		return map[string]any{
@@ -138,13 +148,13 @@ func formatReading(reading ObsSt) map[string]any {
 		return map[string]any{
 			"hub":   reading.HubSn,
 			"batt":  fmt.Sprintf("%.1f volts", reading.Obs[0][16]),
-			"temp":  fmt.Sprintf("%.1f<span style='vertical-align: super; font-size: 9pt;'>°F</span>", reading.Obs[0][7]*1.8+32),
+			"temp":  fmt.Sprintf("%.1f", reading.Obs[0][7]),
 			"humid": fmt.Sprintf("%.1f%%", lastReading.Obs[0][8]),
 			"lumos": Format(int64(reading.Obs[0][9])),
-			"press": Format(int64(reading.Obs[0][6])) + "<span style='font-size:9pt'> mb</span>",
-			"insol": Format(int64(reading.Obs[0][11])) + "<span style='font-size:9pt'> W/m^2</span>",
+			"press": strconv.FormatInt(int64(reading.Obs[0][6]), 10),
+			"insol": Format(int64(reading.Obs[0][11])),
 			"ultra": Format(int64(reading.Obs[0][10])),
-			"wind":  fmt.Sprintf("%.1f<span style='font-size:9pt'> mph</span>", reading.Obs[0][2]*2.236936),
+			"wind":  fmt.Sprintf("%.1f", reading.Obs[0][2]),
 			"wdir":  DegToCompass(reading.Obs[0][4]),
 			"when":  time.Now().Format("2006-01-02 15:04:05"),
 		}
@@ -192,11 +202,13 @@ func main() {
 
 	controller := fir.NewController(
 		"wx-app",
-		fir.DevelopmentMode(false),
+		fir.DevelopmentMode(true),
 		fir.WithPubsubAdapter(pubsubAdapter),
 	)
 
 	http.Handle("/", controller.Route(NewWxIndex(pubsubAdapter)))
+
+	http.Handle("/prefs", controller.RouteFunc(prefs))
 
 	if os.Getenv("SEEKRIT_TOKEN") == "" {
 		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {

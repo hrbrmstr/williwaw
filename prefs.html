@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Weatherflow Tempest Weather • Preferences</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Wx station" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/@livefir/fir@latest/dist/fir.min.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-size: 1.2rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    .back {
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding-top: 10px;
+      padding-left: 10px;
+    }
+    .prefs-div {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);      
+    }
+    @media (prefers-color-scheme: light) {
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="back"><a href="/"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="23.1094" height="18.7656"> <style> path {fill: #000000; } @media (prefers-color-scheme: dark) {path {fill: #ffffff; } } </style> <g> <rect height="18.7656" opacity="0" width="23.1094" x="0" y="0"/> <path d="M0 9.375C0 9.71875 0.15625 10.0469 0.4375 10.3125L8.5 18.3594C8.78125 18.625 9.09375 18.75 9.42188 18.75C10.1094 18.75 10.6406 18.2344 10.6406 17.5312C10.6406 17.2031 10.5312 16.875 10.2969 16.6562L8.14062 14.4219L2.85938 9.67188L2.57812 10.3438L6.73438 10.6406L21.4844 10.6406C22.2188 10.6406 22.7344 10.1094 22.7344 9.375C22.7344 8.64062 22.2188 8.10938 21.4844 8.10938L6.73438 8.10938L2.57812 8.40625L2.85938 9.09375L8.14062 4.32812L10.2969 2.09375C10.5312 1.875 10.6406 1.54688 10.6406 1.21875C10.6406 0.515625 10.1094 0 9.42188 0C9.09375 0 8.78125 0.125 8.5 0.390625L0.4375 8.4375C0.15625 8.70312 0 9.03125 0 9.375Z" fill-opacity="0.85"/> </g> </svg></a></div>
+
+  <div class="prefs-div">
+    <units-pref label="Temperature Units" options="Fahrenheit,Celsius"></units-pref>
+    <units-pref label="Pressure Units" options="mb,inHg"></units-pref>
+    <units-pref label="Wind Units" options="mph,kph"></units-pref>
+  </div>
+
+<script type="module">
+  import { LitElement, html, unsafeHTML, css } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/all/lit-all.min.js';
+
+  class UnitsPref extends LitElement {
+    static styles = css`
+      :host {
+        display: block;
+        margin: 30px;
+      }
+      label {
+        display: inline-block;
+        text-align: right;
+        width: 200px;
+        padding-right: 4px;
+      }
+      `;
+
+    static get properties() {
+      return {
+        label: { type: String },
+        options: { type: String },
+        selected: { type: String },
+        opts: { type: Array },
+      };
+    }
+
+    constructor() {
+      super();
+      this.label = '';
+      this.options = [];
+      this.selected = ''
+    }
+
+    firstUpdated() {
+      this.opts = this.options.split(",")
+      this.loadSelected();
+    }
+
+    async loadSelected() {
+      const key = this.label;
+      const storedValue = localStorage.getItem(`tempestwx:${key}`);
+      if (storedValue) {
+        this.selected = storedValue;
+      } else if (this.opts.length > 0) {
+        this.selected = this.opts[ 0 ];
+        localStorage.setItem(`tempestwx:${key}`, this.selected);
+      }
+      this.requestUpdate();
+    }
+
+    async handleChange(event) {
+      this.selected = event.target.value;
+      const key = this.label;
+      await localStorage.setItem(`tempestwx:${key}`, this.selected);
+    }
+
+    presentOptions() {
+      if (this.opts) {
+        return this.opts.map(
+          option => html`<option ?selected="${this.selected === option}" value="${option}">${option}</option>`
+        )
+      }
+      return html``
+    }
+
+    render() {
+      return html`
+        <label for="${this.label}">${this.label}: </label>
+        <select id="${this.label}" @change="${this.handleChange}" .value="${this.selected}">
+          ${this.presentOptions()}
+        </select>
+        `;
+    }
+  }
+
+  customElements.define('units-pref', UnitsPref);
+</script>
+
+</body>
+</html>
