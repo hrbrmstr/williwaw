@@ -161,7 +161,7 @@
           const windUnits = localStorage.getItem("tempestwx:Wind Units") ?? "mph"
           const symbol = windUnits == "mph" ? "mph" : "kph"
           let value = +this.reading
-          value = windUnits == "mph" ? value * 2.236936 : value
+          value = windUnits == "mph" ? (value * 2.236936).toFixed(1) : value.toFixed(1)
           return html`${value}<span style='vertical-align: super; font-size: 9pt;'>${symbol}</span>`
         } else if (this.id === "insol") {
           return html`${this.reading}<span style='font-size:9pt'> W/m^2</span>`
