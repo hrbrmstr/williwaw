@@ -2,7 +2,7 @@
 {{ block "readings-update" . }}
 <div x-data @fir:updated:ok::readings-update="$fir.replace()">
   <div class="status-bar">
-    <p>📡 {{ .hub }} • 🔋 {{ .batt }} • 🕑 {{ .when }} • <a class="gear" href="/prefs">⚙️</a></p>
+    <tempest-status hub="{{ .hub }}" batt="{{ .batt }}" when="{{ .when }}" path="/prefs"></tempest-status>
   </div>
   <section>
     <div class="flex-container" id="weather-data">
