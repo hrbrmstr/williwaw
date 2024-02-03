@@ -4,7 +4,8 @@
 <head>
   <title>Weatherflow Tempest Weather</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Wx station" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,7 +99,7 @@
     </div>
     <div class="hub-bar" @fir:hub:ok::hub-update.window="$fir.replace()">
       {{ block "hub-update" . }}
-      <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}"></hub-status>
+      <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}" path="/charts"></hub-status>
       {{ end }}
     </div>
   </div>
@@ -128,7 +129,8 @@
         return {
           serial: { type: String },
           uptime: { type: String },
-          firmware: { type: String }
+          firmware: { type: String },
+          path: { type: String }
         }
       }
 
@@ -137,11 +139,12 @@
         this.serial = ""
         this.uptime = ""
         this.firmware = ""
+        this.path = ""
       }
 
       render() {
         return html`
-📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware}
+📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware} • <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a>
 `
       }
     }

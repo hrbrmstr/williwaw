@@ -92,6 +92,16 @@ func prefs() fir.RouteOptions {
 	}
 }
 
+func charts() fir.RouteOptions {
+	return fir.RouteOptions{
+		fir.ID("charts"),
+		fir.Content("charts.html"),
+		fir.OnLoad(func(ctx fir.RouteContext) error {
+			return ctx.Data(map[string]any{})
+		}),
+	}
+}
+
 // load is called when the page is loaded.
 func (i *index) load(ctx fir.RouteContext) error {
 	reading := formatReading(lastReading)
@@ -140,6 +150,11 @@ func SetUserId(next http.Handler) http.Handler {
 	})
 }
 
+func last36HoursHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(last36Hours()))
+}
+
 func main() {
 
 	initUDPListener()
@@ -161,6 +176,8 @@ func main() {
 	http.Handle("/", SetUserId(controller.Route(NewWxIndex(pubsubAdapter))))
 
 	http.Handle("/prefs", controller.RouteFunc(prefs))
+	http.Handle("/charts", controller.RouteFunc(charts))
+	http.HandleFunc("/last36hours", last36HoursHandler)
 
 	if os.Getenv("SEEKRIT_TOKEN") == "" {
 		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {

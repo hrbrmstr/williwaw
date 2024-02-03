@@ -2,9 +2,34 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"log/slog"
 	"time"
+)
+
+type PlotReading struct {
+	Timestamp string  `json:"timestamp"`
+	Temp      float64 `json:"temp"`
+	Humid     float64 `json:"humid"`
+	Lumos     int64   `json:"lumos"`
+	Press     float64 `json:"press"`
+}
+
+const (
+	last36HoursQuery = `
+SELECT
+  datetime(json_extract(reading, '$.obs[0][0]'), 'unixepoch') as ts,
+  json_extract(reading, '$.obs[0][7]') as temp,
+  json_extract(reading, '$.obs[0][8]') as humid,
+  json_extract(reading, '$.obs[0][9]') as lumos,
+  json_extract(reading, '$.obs[0][6]') as press
+FROM readings 
+WHERE 
+  timestamp > DATETIME('now', '-36 hours')
+ORDER BY
+  datetime(json_extract(reading, '$.obs[0][0]'), 'unixepoch')
+`
 )
 
 func initDB(path string) *sql.DB {
@@ -24,6 +49,40 @@ func initDB(path string) *sql.DB {
 	}
 	slog.Info("DB initialized")
 	return db
+}
+
+func last36Hours() string {
+
+	rows, err := db.Query(last36HoursQuery)
+	if err != nil {
+		return ("[]")
+	}
+	defer rows.Close()
+
+	var readings []PlotReading
+
+	// Iterate through the result set
+	for rows.Next() {
+		var r PlotReading
+		err = rows.Scan(&r.Timestamp, &r.Temp, &r.Humid, &r.Lumos, &r.Press)
+		if err != nil {
+			return ("[]")
+		}
+		readings = append(readings, r)
+	}
+
+	// Check for errors from iterating over rows
+	if err = rows.Err(); err != nil {
+		return ("[]")
+	}
+
+	// Convert the result set to JSON
+	jsonData, err := json.Marshal(readings)
+	if err != nil {
+		return ("[]")
+	}
+
+	return string(jsonData)
 }
 
 func logReading(recordType string, reading []byte) {
