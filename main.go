@@ -78,7 +78,6 @@ func (i *index) Options() fir.RouteOptions {
 	return fir.RouteOptions{
 		fir.ID(i.id),
 		fir.Content("readings.html"),
-		fir.Layout("layout.html"),
 		fir.OnLoad(i.load),
 		fir.OnEvent("updated", i.updated),
 		fir.OnEvent("hub", i.hub),
