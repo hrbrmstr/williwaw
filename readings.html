@@ -1,10 +1,11 @@
 {{ define "content" }}
+<div x-data>
+<div @fir:updated:ok::readings-update="$fir.replace()">
 {{ block "readings-update" . }}
-<div x-data @fir:updated:ok::readings-update="$fir.replace()">
-  <div class="status-bar">
-    <tempest-status hub="{{ .hub }}" batt="{{ .batt }}" when="{{ .when }}" path="/prefs"></tempest-status>
+  <div class="station-bar">
+    <tempest-status serial="{{ .serial }}" batt="{{ .batt }}" when="{{ .when }}" path="/prefs"></tempest-status>
   </div>
-  <section>
+  <section style="border: 1px solid transparent;">
     <div class="flex-container" id="weather-data">
       <tempest-reading id="temp"  title="Temperature" reading='{{ .temp  }}'></tempest-reading>
       <tempest-reading id="humid" title="Humidity"    reading='{{ .humid }}'></tempest-reading>
@@ -16,6 +17,12 @@
       <tempest-reading id="wdir"  title="Whence"      reading='{{ .wdir  }}'></tempest-reading>
     </div>
   </section>
-</div>
 {{ end }}
+  </div>
+  <div class="hub-bar" @fir:hub:ok::hub-update="$fir.replace()">
+    {{ block "hub-update" . }}
+    <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}"></hub-status>
+    {{ end }}
+  </div>
+</div>
 {{ end }}

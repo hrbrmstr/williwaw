@@ -7,9 +7,9 @@
 - [ ] Handle other Tempest UDP events
 - [X] Preferences form/route
 - [X] Handle most UI value formatting in HTML/JS
-- [ ] SQLite data logger option
-  - [ ] Charts
-  - [ ] Data export
+- [X] SQLite data logger option
+- [ ] Charts
+- [ ] Data export
 
 ## Build
 

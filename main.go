@@ -1,27 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/livefir/fir"
 	"github.com/livefir/fir/pubsub"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/exp/slog"
 )
-
-type ObsSt struct {
-	FirmwareRevision int64       `json:"firmware_revision"`
-	HubSn            string      `json:"hub_sn"`
-	Obs              [][]float64 `json:"obs"`
-	SerialNumber     string      `json:"serial_number"`
-	Type             string      `json:"type"`
-}
 
 type App struct {
 	sync.RWMutex
@@ -36,42 +28,8 @@ type index struct {
 
 var conn *net.UDPConn
 var lastReading ObsSt
-
-func Format(n int64) string {
-	in := strconv.FormatInt(n, 10)
-	numOfDigits := len(in)
-	if n < 0 {
-		numOfDigits-- // First character is the - sign (not a digit)
-	}
-	numOfCommas := (numOfDigits - 1) / 3
-
-	out := make([]byte, len(in)+numOfCommas)
-	if n < 0 {
-		in, out[0] = in[1:], '-'
-	}
-
-	for i, j, k := len(in)-1, len(out)-1, 0; ; i, j = i-1, j-1 {
-		out[j] = in[i]
-		if i == 0 {
-			return string(out)
-		}
-		if k++; k == 3 {
-			j, k = j-1, 0
-			out[j] = ','
-		}
-	}
-}
-
-func DegToCompass(deg float64) string {
-	var directions = []string{"N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"}
-	ix := int((deg + 22.5) / 45)
-	if ix < 0 {
-		ix = 0
-	} else if ix >= len(directions) {
-		ix = len(directions) - 1
-	}
-	return directions[ix]
-}
+var lastHubStatus HubStatus
+var db *sql.DB
 
 func NewWxIndex(pubsub pubsub.Adapter) *index {
 	c := &index{
@@ -84,6 +42,7 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 	go func() {
 		buf := make([]byte, 1024)
 		var obsInstance ObsSt
+		var hubStatusInstance HubStatus
 
 		for {
 			n, _, _ := conn.ReadFromUDP(buf)
@@ -93,13 +52,20 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 			json.Unmarshal(data, &msg)
 
 			if ttype, ok := msg["type"]; ok {
-				if ttype == "obs_st" {
+				if ttype == "hub_status" {
+
+					json.Unmarshal(data, &hubStatusInstance)
+					lastHubStatus = hubStatusInstance
+					c.eventSender <- fir.NewEvent("hub", hubStatusInstance)
+
+				} else if ttype == "obs_st" {
+					if os.Getenv("DB_PATH") != "" {
+						logReading("obs_st", data)
+					}
 
 					json.Unmarshal(data, &obsInstance)
 					lastReading = obsInstance
-
 					c.eventSender <- fir.NewEvent("updated", obsInstance)
-
 				}
 			}
 		}
@@ -115,6 +81,7 @@ func (i *index) Options() fir.RouteOptions {
 		fir.Layout("layout.html"),
 		fir.OnLoad(i.load),
 		fir.OnEvent("updated", i.updated),
+		fir.OnEvent("hub", i.hub),
 		fir.EventSender(i.eventSender),
 	}
 }
@@ -129,41 +96,14 @@ func prefs() fir.RouteOptions {
 	}
 }
 
-func formatReading(reading ObsSt) map[string]any {
-	if reading.FirmwareRevision == 0 {
-		return map[string]any{
-			"hub":   "⌛️",
-			"batt":  "⌛️",
-			"temp":  "⌛️",
-			"humid": "⌛️",
-			"lumos": "⌛️",
-			"press": "⌛️",
-			"insol": "⌛️",
-			"ultra": "⌛️",
-			"wind":  "⌛️",
-			"wdir":  "⌛️",
-			"when":  "⌛️",
-		}
-	} else {
-		return map[string]any{
-			"hub":   reading.HubSn,
-			"batt":  fmt.Sprintf("%.1f volts", reading.Obs[0][16]),
-			"temp":  fmt.Sprintf("%.1f", reading.Obs[0][7]),
-			"humid": fmt.Sprintf("%.1f%%", lastReading.Obs[0][8]),
-			"lumos": Format(int64(reading.Obs[0][9])),
-			"press": strconv.FormatInt(int64(reading.Obs[0][6]), 10),
-			"insol": Format(int64(reading.Obs[0][11])),
-			"ultra": Format(int64(reading.Obs[0][10])),
-			"wind":  fmt.Sprintf("%.1f", reading.Obs[0][2]),
-			"wdir":  DegToCompass(reading.Obs[0][4]),
-			"when":  time.Now().Format("2006-01-02 15:04:05"),
-		}
-	}
-}
-
 // load is called when the page is loaded.
 func (i *index) load(ctx fir.RouteContext) error {
-	return ctx.Data(formatReading(lastReading))
+	reading := formatReading(lastReading)
+	hubStatus := formatHubStatus(lastHubStatus)
+	for key, value := range hubStatus {
+		reading[key] = value
+	}
+	return ctx.Data(reading)
 }
 
 // updated is called when the "updated" event is received.
@@ -178,6 +118,18 @@ func (i *index) updated(ctx fir.RouteContext) error {
 	return ctx.Data(formatReading(*reading))
 }
 
+// hub is called when the "hub" event is received.
+func (i *index) hub(ctx fir.RouteContext) error {
+	hubStatus := &HubStatus{}
+
+	err := ctx.Bind(hubStatus)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Data(formatHubStatus(*hubStatus))
+}
+
 // initUDPListener creates a UDP listener on port 50222.
 func initUDPListener() {
 	addr, _ := net.ResolveUDPAddr("udp", ":50222")
@@ -188,7 +140,11 @@ func initUDPListener() {
 
 	go func() {
 		<-c
+		slog.Info("Shutting down...")
 		conn.Close()
+		if os.Getenv("DB_PATH") != "" {
+			db.Close()
+		}
 		os.Exit(0)
 	}()
 }
@@ -197,6 +153,11 @@ func main() {
 
 	initUDPListener()
 	defer conn.Close()
+
+	if os.Getenv("DB_PATH") != "" {
+		db = initDB(os.Getenv("DB_PATH"))
+		defer db.Close()
+	}
 
 	pubsubAdapter := pubsub.NewInmem()
 
@@ -216,7 +177,11 @@ func main() {
 			secretToken := os.Getenv("SEEKRIT_TOKEN")
 
 			if token == secretToken {
+				slog.Info("Shutting down...")
 				conn.Close()
+				if os.Getenv("DB_PATH") != "" {
+					db.Close()
+				}
 				os.Exit(0)
 			} else {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)

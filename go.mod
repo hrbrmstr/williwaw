@@ -2,7 +2,10 @@ module codeberg.org/hrbrmstr/gofir
 
 go 1.21.1
 
-require github.com/livefir/fir v0.3.8
+require (
+	github.com/livefir/fir v0.3.8
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
+)
 
 require (
 	github.com/13rac1/goldmark-embed v0.0.0-20201220231550-e6806f2de66a // indirect
@@ -34,6 +37,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/leodido/go-urn v1.3.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.0.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-server-timing v1.0.1 // indirect
@@ -49,12 +53,11 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/timshannon/bolthold v0.0.0-20231129192944-dca5178aa629 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/yuin/goldmark v1.6.0 // indirect
+	github.com/yuin/goldmark v1.7.0 // indirect
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc // indirect
 	go.etcd.io/bbolt v1.3.8 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

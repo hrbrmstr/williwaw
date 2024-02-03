@@ -21,3 +21,5 @@
 go.work
 
 gofir
+gofir.exe
+readings.db
