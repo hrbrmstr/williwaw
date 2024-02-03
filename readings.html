@@ -77,7 +77,7 @@
 
 <body>
   <div x-data>
-    <div @fir:updated:ok::readings-update.window="$fir.replace()">
+    <div @fir:reading:ok::readings-update.window="$fir.replace()">
       {{ block "readings-update" . }}
       <div class="station-bar">
         <tempest-status serial="{{ .serial }}" batt="{{ .batt }}" when="{{ .when }}" path="/prefs"></tempest-status>

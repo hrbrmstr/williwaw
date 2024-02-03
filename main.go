@@ -42,8 +42,6 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 
 	go func() {
 		buf := make([]byte, 1024)
-		var obsInstance ObsSt
-		var hubStatusInstance HubStatus
 
 		for {
 			n, _, _ := conn.ReadFromUDP(buf)
@@ -55,18 +53,16 @@ func NewWxIndex(pubsub pubsub.Adapter) *index {
 			if ttype, ok := msg["type"]; ok {
 				if ttype == "hub_status" {
 
-					json.Unmarshal(data, &hubStatusInstance)
-					lastHubStatus = hubStatusInstance
-					c.eventSender <- fir.NewEvent("hub", hubStatusInstance)
+					json.Unmarshal(data, &lastHubStatus)
+					c.eventSender <- fir.NewEvent("hub", nil)
 
 				} else if ttype == "obs_st" {
 					if os.Getenv("DB_PATH") != "" {
 						logReading("obs_st", data)
 					}
 
-					json.Unmarshal(data, &obsInstance)
-					lastReading = obsInstance
-					c.eventSender <- fir.NewEvent("updated", obsInstance)
+					json.Unmarshal(data, &lastReading)
+					c.eventSender <- fir.NewEvent("reading", nil)
 				}
 			}
 		}
@@ -80,8 +76,8 @@ func (i *index) Options() fir.RouteOptions {
 		fir.ID(i.id),
 		fir.Content("readings.html"),
 		fir.OnLoad(i.load),
-		fir.OnEvent("updated", i.updated),
-		fir.OnEvent("hub", i.hub),
+		fir.OnEvent("reading", i.updateReading),
+		fir.OnEvent("hub", i.updateHub),
 		fir.EventSender(i.eventSender),
 	}
 }
@@ -106,28 +102,14 @@ func (i *index) load(ctx fir.RouteContext) error {
 	return ctx.Data(reading)
 }
 
-// updated is called when the "updated" event is received.
-func (i *index) updated(ctx fir.RouteContext) error {
-	reading := &ObsSt{}
-
-	err := ctx.Bind(reading)
-	if err != nil {
-		return err
-	}
-
-	return ctx.Data(formatReading(*reading))
+// updateReading is called when the "reading" event is received.
+func (i *index) updateReading(ctx fir.RouteContext) error {
+	return ctx.Data(formatReading(lastReading))
 }
 
-// hub is called when the "hub" event is received.
-func (i *index) hub(ctx fir.RouteContext) error {
-	hubStatus := &HubStatus{}
-
-	err := ctx.Bind(hubStatus)
-	if err != nil {
-		return err
-	}
-
-	return ctx.Data(formatHubStatus(*hubStatus))
+// updateHub is called when the "hub" event is received.
+func (i *index) updateHub(ctx fir.RouteContext) error {
+	return ctx.Data(formatHubStatus(lastHubStatus))
 }
 
 // initUDPListener creates a UDP listener on port 50222.

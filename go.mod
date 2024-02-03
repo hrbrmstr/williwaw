@@ -3,7 +3,7 @@ module codeberg.org/hrbrmstr/gofir
 go 1.21.1
 
 require (
-	github.com/livefir/fir v0.3.8
+	github.com/livefir/fir v0.4.0
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 )
 
@@ -35,7 +35,7 @@ require (
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
-	github.com/leodido/go-urn v1.3.0 // indirect
+	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lithammer/shortuuid/v4 v4.0.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/minio/sha256-simd v1.0.1 // indirect
