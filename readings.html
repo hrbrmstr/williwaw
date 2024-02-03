@@ -1,6 +1,6 @@
 {{ define "content" }}
 <div x-data>
-<div @fir:updated:ok::readings-update="$fir.replace()">
+<div @fir:updated:ok::readings-update.window="$fir.replace()">
 {{ block "readings-update" . }}
   <div class="station-bar">
     <tempest-status serial="{{ .serial }}" batt="{{ .batt }}" when="{{ .when }}" path="/prefs"></tempest-status>
@@ -19,7 +19,7 @@
   </section>
 {{ end }}
   </div>
-  <div class="hub-bar" @fir:hub:ok::hub-update="$fir.replace()">
+  <div class="hub-bar" @fir:hub:ok::hub-update.window="$fir.replace()">
     {{ block "hub-update" . }}
     <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}"></hub-status>
     {{ end }}
