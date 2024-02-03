@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net"
@@ -148,6 +149,15 @@ func initUDPListener() {
 	}()
 }
 
+// there's only one user and setting this in the context prevents
+// fir from spewing out needless messages about the user not being set.
+func SetUserId(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), fir.UserKey, "wx")
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func main() {
 
 	initUDPListener()
@@ -166,7 +176,7 @@ func main() {
 		fir.WithPubsubAdapter(pubsubAdapter),
 	)
 
-	http.Handle("/", controller.Route(NewWxIndex(pubsubAdapter)))
+	http.Handle("/", SetUserId(controller.Route(NewWxIndex(pubsubAdapter))))
 
 	http.Handle("/prefs", controller.RouteFunc(prefs))
 
