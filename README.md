@@ -5,6 +5,7 @@
 ## TODO
 
 - [ ] Handle other Tempest UDP events
+  - [X] `hub_status` 
 - [X] Preferences form/route
 - [X] Handle most UI value formatting in HTML/JS
 - [X] SQLite data logger option
