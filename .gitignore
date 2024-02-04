@@ -20,6 +20,8 @@
 # Go workspace file
 go.work
 
-gofir
-gofir.exe
+williwaw
+williwaw.exe
+aarch64-williwaw
+x86_64-williwaw
 readings.db
