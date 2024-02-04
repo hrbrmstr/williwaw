@@ -89,3 +89,36 @@ func formatHubStatus(hubStatus HubStatus) map[string]any {
 		}
 	}
 }
+
+func isValidUnixTimestamp(ts time.Time) bool {
+	return ts.Year() > 0 && ts.Year() <= 9999
+}
+
+func parseDateOrDateTime(input string) (time.Time, error) {
+	var layouts = []string{
+		"2006-01-02",
+		"2006-01-02 15:04",
+		"2006-01-02 15:04:05",
+	}
+
+	var parsedTime time.Time
+	var err error
+
+	tsInt, err := strconv.Atoi(input)
+
+	if err == nil {
+		parsedTime = time.Unix(int64(tsInt), 0)
+		if isValidUnixTimestamp(parsedTime) {
+			return parsedTime, nil
+		}
+	} else {
+		for _, layout := range layouts {
+			parsedTime, err = time.Parse(layout, input)
+			if err == nil {
+				return parsedTime, nil
+			}
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unable to parse date/time: %v", input)
+}

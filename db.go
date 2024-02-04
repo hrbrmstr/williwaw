@@ -16,8 +16,10 @@ type PlotReading struct {
 	Press     float64 `json:"press"`
 }
 
+// DATETIME('now', '-36 hours')
+
 const (
-	last36HoursQuery = `
+	sinceQueryString = `
 SELECT
   datetime(json_extract(reading, '$.obs[0][0]'), 'unixepoch') as ts,
   json_extract(reading, '$.obs[0][7]') as temp,
@@ -26,7 +28,7 @@ SELECT
   json_extract(reading, '$.obs[0][6]') as press
 FROM readings 
 WHERE 
-  timestamp > DATETIME('now', '-36 hours')
+  timestamp >= ?
 ORDER BY
   datetime(json_extract(reading, '$.obs[0][0]'), 'unixepoch')
 `
@@ -51,11 +53,12 @@ func initDB(path string) *sql.DB {
 	return db
 }
 
-func last36Hours() string {
+func sinceQuery(ts time.Time) (string, error) {
 
-	rows, err := db.Query(last36HoursQuery)
+	rows, err := db.Query(sinceQueryString, ts)
+
 	if err != nil {
-		return ("[]")
+		return "[]", err
 	}
 	defer rows.Close()
 
@@ -66,23 +69,23 @@ func last36Hours() string {
 		var r PlotReading
 		err = rows.Scan(&r.Timestamp, &r.Temp, &r.Humid, &r.Lumos, &r.Press)
 		if err != nil {
-			return ("[]")
+			return "[]", err
 		}
 		readings = append(readings, r)
 	}
 
 	// Check for errors from iterating over rows
 	if err = rows.Err(); err != nil {
-		return ("[]")
+		return "[]", err
 	}
 
 	// Convert the result set to JSON
 	jsonData, err := json.Marshal(readings)
 	if err != nil {
-		return ("[]")
+		return "[]", err
 	}
 
-	return string(jsonData)
+	return string(jsonData), nil
 }
 
 func logReading(recordType string, reading []byte) {

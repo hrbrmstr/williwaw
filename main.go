@@ -109,6 +109,13 @@ func (i *index) load(ctx fir.RouteContext) error {
 	for key, value := range hubStatus {
 		reading[key] = value
 	}
+
+	if os.Getenv("DB_PATH") != "" {
+		reading["chartIcon"] = "show"
+	} else {
+		reading["chartIcon"] = "hide"
+	}
+
 	return ctx.Data(reading)
 }
 
@@ -150,9 +157,25 @@ func SetUserId(next http.Handler) http.Handler {
 	})
 }
 
-func last36HoursHandler(w http.ResponseWriter, r *http.Request) {
+func since(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(last36Hours()))
+
+	queryParameters := r.URL.Query()
+
+	value := queryParameters.Get("ts")
+	parsedDate, err := parseDateOrDateTime(value)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("[]"))
+	} else {
+		res, err := sinceQuery(parsedDate)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("[]"))
+		}
+		w.Write([]byte(res))
+	}
 }
 
 func main() {
@@ -176,8 +199,11 @@ func main() {
 	http.Handle("/", SetUserId(controller.Route(NewWxIndex(pubsubAdapter))))
 
 	http.Handle("/prefs", controller.RouteFunc(prefs))
-	http.Handle("/charts", controller.RouteFunc(charts))
-	http.HandleFunc("/last36hours", last36HoursHandler)
+
+	if os.Getenv("DB_PATH") != "" {
+		http.Handle("/charts", controller.RouteFunc(charts))
+		http.HandleFunc("/since", since)
+	}
 
 	if os.Getenv("SEEKRIT_TOKEN") == "" {
 		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {

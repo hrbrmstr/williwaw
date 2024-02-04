@@ -99,7 +99,7 @@
     </div>
     <div class="hub-bar" @fir:hub:ok::hub-update.window="$fir.replace()">
       {{ block "hub-update" . }}
-      <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}" path="/charts"></hub-status>
+      <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}" chartIcon="{{ .chartIcon }}" path="/charts"></hub-status>
       {{ end }}
     </div>
   </div>
@@ -130,7 +130,8 @@
           serial: { type: String },
           uptime: { type: String },
           firmware: { type: String },
-          path: { type: String }
+          path: { type: String },
+          chartIcon: { type: String }
         }
       }
 
@@ -140,12 +141,14 @@
         this.uptime = ""
         this.firmware = ""
         this.path = ""
+        this.chartIcon = "hide"
       }
 
       render() {
-        return html`
-📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware} • <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a>
-`
+        if (this.chartIcon === "hide") {
+          return html`📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware}`
+        }
+        return html`📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware} • <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a>`
       }
     }
     customElements.define('hub-status', HubStatus);
