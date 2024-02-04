@@ -16,7 +16,6 @@ build-win:
 update-modules:
   go get -u ./...
   go mod tidy
-  go build .
 
 run:
   SEEKRIT_TOKEN=bye DB_PATH=readings.db go run .
