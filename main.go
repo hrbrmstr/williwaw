@@ -10,11 +10,19 @@ import (
 	"os/signal"
 	"sync"
 
+	"github.com/alexflint/go-arg"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/livefir/fir"
 	"github.com/livefir/fir/pubsub"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/exp/slog"
 )
+
+type WillowParams struct {
+	SeekritToken string `arg:"-s,--seekrit,env:SEEKRIT_TOKEN" help:"token enabling remote disabling" placeholder:"SEEKRIT_TOKEN"`
+	DbPath       string `arg:"-p,--path,env:DB_PATH" help:"Full path to datalogger file db" placeholder:"DB_PATH"`
+	ListenPort   string `arg:"-l,--listen-port,env:PORT" help:"port to listen on" placeholder:"PORT" default:"9867"`
+}
 
 type App struct {
 	sync.RWMutex
@@ -27,6 +35,7 @@ type index struct {
 	id          string
 }
 
+var willowParams WillowParams
 var conn *net.UDPConn
 var lastReading ObsSt
 var lastHubStatus HubStatus
@@ -182,10 +191,12 @@ func since(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	arg.MustParse(&willowParams)
+
 	initUDPListener()
 	defer conn.Close()
 
-	if os.Getenv("DB_PATH") != "" {
+	if willowParams.DbPath != "" {
 		db = initDB(os.Getenv("DB_PATH"))
 		defer db.Close()
 	}
@@ -202,20 +213,20 @@ func main() {
 
 	http.Handle("/prefs", controller.RouteFunc(prefs))
 
-	if os.Getenv("DB_PATH") != "" {
+	if willowParams.DbPath != "" {
 		http.Handle("/charts", controller.RouteFunc(charts))
 		http.HandleFunc("/since", since)
 	}
 
-	if os.Getenv("SEEKRIT_TOKEN") == "" {
+	if willowParams.SeekritToken == "" {
 		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
 			token := r.URL.Query().Get("token")
-			secretToken := os.Getenv("SEEKRIT_TOKEN")
+			secretToken := willowParams.SeekritToken
 
 			if token == secretToken {
 				slog.Info("Shutting down...")
 				conn.Close()
-				if os.Getenv("DB_PATH") != "" {
+				if willowParams.DbPath != "" {
 					db.Close()
 				}
 				os.Exit(0)
@@ -225,5 +236,5 @@ func main() {
 		})
 	}
 
-	http.ListenAndServe("0.0.0.0:9867", nil)
+	http.ListenAndServe("0.0.0.0:"+willowParams.ListenPort, nil)
 }

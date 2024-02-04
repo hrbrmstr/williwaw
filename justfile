@@ -1,3 +1,6 @@
+# use .env here
+set dotenv-load := true
+
 binary := "williwaw"
 
 # list the available recipes
@@ -23,4 +26,8 @@ update-modules:
 # run for testing
 run:
   scp ceres:/Volumes/crucial/tempest/2024-02-03.db ./readings.db
-  SEEKRIT_TOKEN=bye DB_PATH=readings.db go run .
+  go run .
+
+# SBOM
+sbom:
+  syft packages dir:. -o json > sbom.json

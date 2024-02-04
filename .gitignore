@@ -25,3 +25,4 @@ williwaw.exe
 aarch64-williwaw
 x86_64-williwaw
 readings.db
+.env

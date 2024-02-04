@@ -46,6 +46,54 @@ If you don’t set `SEEKRIT_TOKEN` the `/quit` route will not be set up.
 
 If you don’t set `DB_PATH` the datalogger won’t be started.
 
+You can use CLI params or environent variables or a `.env` files to set
+preferences:
+
+``` bash
+$ Usage: williwaw [--seekrit SEEKRIT_TOKEN] [--path DB_PATH] [--listen-port PORT]
+
+Options:
+  --seekrit SEEKRIT_TOKEN, -s SEEKRIT_TOKEN
+                         token enabling remote disabling [env: SEEKRIT_TOKEN]
+  --path DB_PATH, -p DB_PATH
+                         Full path to datalogger file db [env: DB_PATH]
+  --listen-port PORT, -l PORT
+                         port to listen on [default: 9867, env: PORT]
+  --help, -h             display this help and exit
+```
+
+## Routes
+
+- `/` - the main page where readings are updated
+- `prefs` - interact with user preferences
+- `/quit?token=something-you-make-up` - terminates the program; REQUIRES
+  `SEEKRIT_TOKEN` to be set
+- `/charts` - charts page; REQUIRES `DB_PATH` to be set
+- `/since?ts=yyyy-mm-dd` - returns all readings since the given
+  timestamp (including the given timestamp) as a JSON array; REQUIRES
+  `DB_PATH` to be set
+
+## Tailscale
+
+Highly suggest running this on a Tailscale tailnet for ubiquitous access
+w/o exposing anything to the internet directly. If that’s possible,
+here’s a sample nginx reverse proxy config:
+
+``` nginx
+location /tempestwx/ {
+  proxy_pass http://#.#.#.#:#/;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-for $remote_addr;
+  proxy_ssl_verify off;
+  port_in_redirect off;
+  proxy_connect_timeout 300;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
+```
+
 ## WAT
 
 Around five years go I got a few NuVision TMAX cheap 8” Windows tablets
@@ -88,3 +136,8 @@ eventually.
 **Safari** (light mode)
 
 ![](imgs/safari.png)
+
+## REF
+
+- [WeatherFlow Tempest UDP Reference -
+  v171](https://weatherflow.github.io/Tempest/api/udp/v171/)
