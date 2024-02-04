@@ -57,23 +57,23 @@
 
   import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
 
-  const res = await fetch("/last36hours")
+  const res = await fetch(`${back.href}/last36hours`)
   const data = await res.json()
   data.forEach(d => d.timestamp = new Date(d.timestamp))
 
-  const tempPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, { x: "timestamp", y: "temp" }) ] })
+  const tempPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, { x: "timestamp", y: "temp", r:0.5}) ] })
   const temp = document.querySelector("#temp");
   temp.append(tempPlt);
 
-  const humidPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, {x: "timestamp", y: "humid"}) ] })
+  const humidPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, {x: "timestamp", y: "humid", r: 0.5 }) ] })
   const humid = document.querySelector("#humid");
   humid.append(humidPlt);
 
-  const pressPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, {x: "timestamp", y: "press"}) ] })
+  const pressPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, {x: "timestamp", y: "press", r:0.5}) ] })
   const press = document.querySelector("#press");
   temp.append(pressPlt);
 
-  const lumosPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, { x: "timestamp", y: "lumos" }) ] })
+  const lumosPlt = Plot.plot({ height: 200, y: { grid: true }, marks: [ Plot.dot(data, { x: "timestamp", y: "lumos", r:0.5}) ] })
   const lumos = document.querySelector("#lumos");
   temp.append(lumosPlt);
 
