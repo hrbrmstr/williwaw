@@ -18,7 +18,7 @@
 
 ```bash
 $ # clone me
-$ cd gofir
+$ cd williwaw
 $ go build
 ```
 
@@ -27,7 +27,7 @@ $ go build
 On interrupt/control-c, the program cleans up after itself, but you can also terminate it remotely via the `/quit?token=something-you-make-up` endpoint:
 
 ```bash
-$   SEEKRIT_TOKEN=bye DB_PATH=readings.db ./gofir
+$   SEEKRIT_TOKEN=bye DB_PATH=readings.db ./williwaw
 ```
 
 If you don't set `SEEKRIT_TOKEN` the `/quit` route will not be set up.

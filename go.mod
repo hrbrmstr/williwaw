@@ -1,4 +1,4 @@
-module codeberg.org/hrbrmstr/gofir
+module codeberg.org/hrbrmstr/williwaw
 
 go 1.21.1
 
