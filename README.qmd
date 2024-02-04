@@ -76,3 +76,8 @@ Arc (dark mode) is shown up top. I'll take new captures of these (below) eventua
 **Safari** (light mode)
 
 ![](imgs/safari.png)
+
+
+## REF
+
+- [WeatherFlow Tempest UDP Reference - v171](https://weatherflow.github.io/Tempest/api/udp/v171/)

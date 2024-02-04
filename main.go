@@ -82,6 +82,7 @@ func (i *index) Options() fir.RouteOptions {
 	}
 }
 
+// /prefs route handler
 func prefs() fir.RouteOptions {
 	return fir.RouteOptions{
 		fir.ID("prefs"),
@@ -92,6 +93,7 @@ func prefs() fir.RouteOptions {
 	}
 }
 
+// /charts route handler
 func charts() fir.RouteOptions {
 	return fir.RouteOptions{
 		fir.ID("charts"),
