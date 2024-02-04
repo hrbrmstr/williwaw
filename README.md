@@ -9,7 +9,9 @@
 - [X] Preferences form/route
 - [X] Handle most UI value formatting in HTML/JS
 - [X] SQLite data logger option
-- [ ] Charts
+- [X] Charts
+  - [ ] Have them use units prefs
+  - [ ] Auto refresh
 - [ ] Data export
 
 ## Build
