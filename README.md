@@ -39,7 +39,7 @@ also terminate it remotely via the `/quit?token=something-you-make-up`
 endpoint:
 
 ``` bash
-$   SEEKRIT_TOKEN=bye DB_PATH=readings.db ./williwaw
+$ SEEKRIT_TOKEN=bye DB_PATH=readings.db ./williwaw
 ```
 
 If you don’t set `SEEKRIT_TOKEN` the `/quit` route will not be set up.
@@ -50,7 +50,8 @@ You can use CLI params or environent variables or a `.env` files to set
 preferences:
 
 ``` bash
-$ Usage: williwaw [--seekrit SEEKRIT_TOKEN] [--path DB_PATH] [--listen-port PORT]
+$ ./williwaw --help
+Usage: williwaw [--seekrit SEEKRIT_TOKEN] [--path DB_PATH] [--listen-port PORT]
 
 Options:
   --seekrit SEEKRIT_TOKEN, -s SEEKRIT_TOKEN
