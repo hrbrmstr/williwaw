@@ -1,3 +1,5 @@
+# vim: set ft=make :
+
 # use .env here
 set dotenv-load := true
 
