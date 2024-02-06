@@ -59,7 +59,7 @@ type PlotReading struct {
 const (
 	sinceQueryString = `
 SELECT
-  datetime(json_extract(reading, '$.obs[0][0]'), 'unixepoch') as ts,
+  datetime(datetime(json_extract(reading, '$.obs[0][0]'), 'unixepoch'), '-5 hours') as ts,
   json_extract(reading, '$.obs[0][7]') as temp,
   json_extract(reading, '$.obs[0][8]') as humid,
   json_extract(reading, '$.obs[0][9]') as lumos,
