@@ -56,11 +56,11 @@
       top: 0;             /* Aligns the div to the top of the window */
       left: 0;            /* Aligns the div to the left of the window */
       width: 100%;        /* Ensures the div spans the full width of the window */
-      height: 50px;       /* Adjust the height as needed */
+      height: 100px;       /* Adjust the height as needed */
       text-align: center; /* Centers the text inside the status bar */
-      line-height: 50px;  /* Vertically centers the text (should match height) */
+      line-height: 24px;  /* Vertically centers the text (should match height) */
       font-family: 'Space Mono', monospace;
-      font-size: 9pt;
+      font-size: 12pt;
     }
 
     tempest-bar {
@@ -99,7 +99,16 @@
     </div>
     <div class="hub-bar" @fir:hub:ok::hub-update.window="$fir.replace()">
       {{ block "hub-update" . }}
-      <hub-status serial="{{ .hubsn }}" uptime="{{ .uptime }}" firmware="{{ .hubfirm }}" chartIcon="{{ .chartIcon }}" path="/charts"></hub-status>
+      <hub-status 
+        serial="{{ .hubsn }}" 
+        uptime="{{ .uptime }}" 
+        firmware="{{ .hubfirm }}" 
+        chartIcon="{{ .chartIcon }}" 
+        station="{{ .station }}" 
+        sunrise="{{ .sunrise }}" 
+        sunset="{{ .sunset }}" 
+        path="/charts"
+      ></hub-status>
       {{ end }}
     </div>
   </div>
@@ -109,9 +118,27 @@
     import { LitElement, html, css, unsafeHTML, unsafeSVG } from 'https://cdn.jsdelivr.net/gh/lit/dist@3/all/lit-all.min.js';
     import { default as humanizeDuration } from 'https://cdn.jsdelivr.net/npm/humanize-duration@3.31.0/+esm';
 
+    function getNow() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    const sunrise = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="13.0234" height="12.6172"> <style> path {fill: #000000; } @media (prefers-color-scheme: dark) {path {fill: #ffffff; } } </style> <g> <rect height="12.6172" opacity="0" width="13.0234" x="0" y="0"/> <path d="M12.6172 6.3125C12.6172 9.75781 9.75 12.6172 6.30469 12.6172C2.86719 12.6172 0 9.75781 0 6.3125C0 2.86719 2.85938 0.0078125 6.29688 0.0078125C9.74219 0.0078125 12.6172 2.86719 12.6172 6.3125ZM3.07812 8.28906C2.875 8.28906 2.69531 8.44531 2.69531 8.64844C2.69531 8.85156 2.88281 9.00781 3.07812 9.00781L9.52344 9.00781C9.71875 9.00781 9.90625 8.85156 9.90625 8.64844C9.90625 8.44531 9.72656 8.28906 9.52344 8.28906ZM4.54688 7.39844C4.54688 7.5625 4.57031 7.72656 4.625 7.88281L7.97656 7.88281C8.03125 7.72656 8.05469 7.5625 8.05469 7.39844C8.05469 6.44531 7.25781 5.64062 6.29688 5.64062C5.34375 5.64062 4.54688 6.44531 4.54688 7.39844ZM3.08594 6.96094C2.85938 6.96094 2.69531 7.125 2.69531 7.32812C2.69531 7.52344 2.85938 7.6875 3.08594 7.6875L3.75 7.6875C3.97656 7.6875 4.14844 7.53125 4.14844 7.32812C4.14844 7.11719 3.97656 6.96094 3.75 6.96094ZM8.85156 6.96094C8.625 6.96094 8.44531 7.11719 8.44531 7.32812C8.44531 7.53125 8.625 7.6875 8.85156 7.6875L9.51562 7.6875C9.74219 7.6875 9.90625 7.52344 9.90625 7.32812C9.90625 7.125 9.74219 6.96094 9.51562 6.96094ZM3.74219 4.85156C3.60938 5 3.60938 5.21875 3.77344 5.38281L4.25 5.85938C4.40625 6.01562 4.64062 6.03125 4.78906 5.88281C4.92969 5.73438 4.91406 5.5 4.75781 5.34375L4.28125 4.86719C4.11719 4.70312 3.89062 4.71094 3.74219 4.85156ZM8.32031 4.86719L7.84375 5.34375C7.67969 5.50781 7.67969 5.73438 7.82031 5.88281C7.96875 6.02344 8.19531 6.02344 8.35938 5.85938L8.82812 5.38281C8.98438 5.21875 8.99219 5 8.85938 4.85156C8.71094 4.69531 8.47656 4.71094 8.32031 4.86719ZM6.05469 2.46875L5.10938 3.33594C5.03125 3.41406 5.00781 3.49219 5.00781 3.58594C5.00781 3.75781 5.13281 3.89062 5.32031 3.89062C5.40625 3.89062 5.49219 3.85156 5.5625 3.78906L5.96094 3.39844L5.95312 3.40625L5.9375 3.58594L5.9375 4.6875C5.9375 4.89844 6.09375 5.07812 6.29688 5.07812C6.50781 5.07812 6.66406 4.89844 6.66406 4.6875L6.66406 3.58594L6.64844 3.38281L6.6875 3.42969L7.03906 3.78906C7.09375 3.85156 7.19531 3.89062 7.28125 3.89062C7.46094 3.89062 7.59375 3.75781 7.59375 3.58594C7.59375 3.49219 7.57031 3.41406 7.49219 3.33594L6.53906 2.46875C6.46094 2.39844 6.38281 2.35938 6.29688 2.35938C6.21875 2.35938 6.14062 2.39844 6.05469 2.46875Z"fill-opacity="0.85"/> </g> </svg>`
+    const sunset = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="13.0234" height="12.6172"> <style> path {fill: #000000; } @media (prefers-color-scheme: dark) {path {fill: #ffffff; } } </style> <g> <rect height="12.6172" opacity="0" width="13.0234" x="0" y="0"/> <path d="M12.6172 6.3125C12.6172 9.75781 9.75 12.6172 6.30469 12.6172C2.86719 12.6172 0 9.75781 0 6.3125C0 2.86719 2.85938 0.0078125 6.29688 0.0078125C9.74219 0.0078125 12.6172 2.86719 12.6172 6.3125ZM3.08594 8.28906C2.88281 8.28906 2.70312 8.44531 2.70312 8.64844C2.70312 8.85156 2.89062 9.00781 3.08594 9.00781L9.53125 9.00781C9.72656 9.00781 9.91406 8.85156 9.91406 8.64844C9.91406 8.44531 9.73438 8.28906 9.53125 8.28906ZM4.54688 7.39844C4.54688 7.5625 4.57812 7.72656 4.625 7.88281L7.98438 7.88281C8.03906 7.72656 8.0625 7.5625 8.0625 7.39844C8.0625 6.44531 7.26562 5.64062 6.30469 5.64062C5.35156 5.64062 4.54688 6.44531 4.54688 7.39844ZM3.09375 6.96094C2.86719 6.96094 2.70312 7.125 2.70312 7.32812C2.70312 7.52344 2.86719 7.6875 3.09375 7.6875L3.75781 7.6875C3.98438 7.6875 4.15625 7.53125 4.15625 7.32812C4.15625 7.11719 3.98438 6.96094 3.75781 6.96094ZM8.85938 6.96094C8.63281 6.96094 8.45312 7.11719 8.45312 7.32812C8.45312 7.53125 8.63281 7.6875 8.85938 7.6875L9.52344 7.6875C9.75 7.6875 9.91406 7.52344 9.91406 7.32812C9.91406 7.125 9.75 6.96094 9.52344 6.96094ZM3.75 4.85156C3.61719 5 3.61719 5.21875 3.78125 5.38281L4.25781 5.85938C4.41406 6.01562 4.64844 6.03125 4.79688 5.88281C4.9375 5.73438 4.92188 5.5 4.76562 5.34375L4.28906 4.86719C4.125 4.70312 3.89844 4.71094 3.75 4.85156ZM8.32812 4.86719L7.85156 5.34375C7.6875 5.50781 7.6875 5.73438 7.82812 5.88281C7.96875 6.02344 8.20312 6.02344 8.36719 5.85938L8.83594 5.38281C8.99219 5.21875 9 5 8.85938 4.85156C8.71875 4.69531 8.48438 4.71094 8.32812 4.86719ZM5.94531 2.75L5.94531 3.85156L5.96094 4.03125L5.96875 4.03906L5.57031 3.64844C5.5 3.58594 5.41406 3.54688 5.32812 3.54688C5.14062 3.54688 5.01562 3.67969 5.01562 3.85156C5.01562 3.94531 5.03906 4.01562 5.11719 4.09375L6.0625 4.96875C6.14844 5.03906 6.22656 5.07812 6.30469 5.07812C6.39062 5.07812 6.46875 5.03906 6.54688 4.96875L7.5 4.09375C7.57812 4.01562 7.60156 3.94531 7.60156 3.85156C7.60156 3.67969 7.46875 3.54688 7.28906 3.54688C7.20312 3.54688 7.10156 3.58594 7.04688 3.64844L6.69531 4.00781L6.65625 4.05469L6.67188 3.85156L6.67188 2.75C6.67188 2.53906 6.51562 2.35938 6.30469 2.35938C6.10156 2.35938 5.94531 2.53906 5.94531 2.75Z" fill-opacity="0.85"/> </g> </svg>`
+
     class HubStatus extends LitElement {
 
       static styles = css`
+        p {
+          margin: 0;
+          padding: 0;
+          padding-top: 6px;
+        }
         .gear {
           text-decoration: none;
           font-size: 1.2em;
@@ -131,6 +158,9 @@
           uptime: { type: String },
           firmware: { type: String },
           path: { type: String },
+          sunrise: { type: String },
+          sunset: { type: String },
+          station: { type: String },
           chartIcon: { type: String }
         }
       }
@@ -141,17 +171,35 @@
         this.uptime = ""
         this.firmware = ""
         this.path = ""
+        this.sunrise = ""
+        this.sunset = ""
+        this.station = ""
         this.chartIcon = "hide"
       }
 
       render() {
         if (this.chartIcon === "hide") {
-          return html`📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware}`
+          return html`
+<p title="${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware}">📡 ${this.serial} 
+  ⌚️ ${getNow()} 
+  🧭 ${this.station}
+  ${unsafeSVG(sunrise)} ${this.sunrise}
+  ${unsafeSVG(sunset)} ${this.sunset}</p>
+`
         }
-        return html`📡 ${this.serial} • ${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware} • <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a>`
+        return html`
+<p title="${humanizeDuration(1000 * +this.uptime)} • v.${this.firmware}">📡 ${this.serial}
+  ⌚️ ${getNow()}
+  🧭 ${this.station}
+  ${unsafeSVG(sunrise)} ${this.sunrise}
+  ${unsafeSVG(sunset)} ${this.sunset}
+  <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a></p>
+`
       }
     }
     customElements.define('hub-status', HubStatus);
+
+    const observe = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="11.5859" height="13.1484"> <style> path {fill: #000000; } @media (prefers-color-scheme: dark) {path {fill: #ffffff; } } </style> <g> <rect height="13.1484" opacity="0" width="11.5859" x="0" y="0"/> <path d="M2.45312 0.679688C2.45312 1.125 2.6875 1.36719 3.14062 1.36719L8.03906 1.36719C8.48438 1.36719 8.72656 1.125 8.72656 0.679688C8.72656 0.234375 8.48438 0 8.03906 0L3.14062 0C2.6875 0 2.45312 0.234375 2.45312 0.679688ZM4.01562 3.63281C4.01562 4.07031 4.25 4.30469 4.69531 4.30469L6.48438 4.30469C6.92969 4.30469 7.16406 4.07031 7.16406 3.63281C7.16406 3.17969 6.92969 2.94531 6.48438 2.94531L4.69531 2.94531C4.25 2.94531 4.01562 3.17969 4.01562 3.63281ZM0 6.57031C0 7.01562 0.234375 7.25 0.679688 7.25L10.4922 7.25C10.9453 7.25 11.1797 7.01562 11.1797 6.57031C11.1797 6.125 10.9453 5.89062 10.4922 5.89062L0.679688 5.89062C0.234375 5.89062 0 6.125 0 6.57031ZM4.01562 9.50781C4.01562 9.96094 4.25 10.1953 4.69531 10.1953L6.48438 10.1953C6.92969 10.1953 7.16406 9.96094 7.16406 9.50781C7.16406 9.07031 6.92969 8.83594 6.48438 8.83594L4.69531 8.83594C4.25 8.83594 4.01562 9.07031 4.01562 9.50781ZM2.45312 12.4609C2.45312 12.9062 2.6875 13.1406 3.14062 13.1406L8.03906 13.1406C8.48438 13.1406 8.72656 12.9062 8.72656 12.4609C8.72656 12.0156 8.48438 11.7734 8.03906 11.7734L3.14062 11.7734C2.6875 11.7734 2.45312 12.0156 2.45312 12.4609Z" fill-opacity="0.85"/> </g> </svg>`
 
     class TempestStatus extends LitElement {
 
@@ -188,7 +236,7 @@
 
       render() {
         return html`
-<p>🛰️ ${this.serial} • 🔋 ${this.batt} • 🕑 ${this.when} • <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">⚙️</a></p>
+<p>🛰️ ${this.serial} 🔋 ${this.batt} ${unsafeSVG(observe)} ${this.when} <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">⚙️</a></p>
 `
       }
     }

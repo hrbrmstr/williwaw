@@ -8,21 +8,17 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
+	"time"
 
-	"github.com/alexflint/go-arg"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/livefir/fir"
 	"github.com/livefir/fir/pubsub"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sj14/astral/pkg/astral"
 	"golang.org/x/exp/slog"
 )
-
-type WillowParams struct {
-	SeekritToken string `arg:"-s,--seekrit,env:SEEKRIT_TOKEN" help:"token enabling remote disabling" placeholder:"SEEKRIT_TOKEN"`
-	DbPath       string `arg:"-p,--path,env:DB_PATH" help:"Full path to datalogger file db" placeholder:"DB_PATH"`
-	ListenPort   string `arg:"-l,--listen-port,env:PORT" help:"port to listen on" placeholder:"PORT" default:"9867"`
-}
 
 type App struct {
 	sync.RWMutex
@@ -35,11 +31,14 @@ type index struct {
 	id          string
 }
 
-var willowParams WillowParams
 var conn *net.UDPConn
 var lastReading ObsSt
 var lastHubStatus HubStatus
 var db *sql.DB
+var latitude float64
+var longitude float64
+var elevation float64
+var observer astral.Observer
 
 func NewWxIndex(pubsub pubsub.Adapter) *index {
 	c := &index{
@@ -116,7 +115,22 @@ func charts() fir.RouteOptions {
 // load is called when the page is loaded.
 func (i *index) load(ctx fir.RouteContext) error {
 	reading := formatReading(lastReading)
+
 	hubStatus := formatHubStatus(lastHubStatus)
+
+	reading["station"] = os.Getenv("STATION")
+
+	if os.Getenv("LATITUDE") != "" {
+		sunrise, _ := astral.Sunrise(observer, time.Now())
+		sunset, _ := astral.Sunset(observer, time.Now())
+
+		reading["sunrise"] = sunrise.Format("15:04")
+		reading["sunset"] = sunset.Format("15:04")
+	} else {
+		reading["sunrise"] = ""
+		reading["sunset"] = ""
+	}
+
 	for key, value := range hubStatus {
 		reading[key] = value
 	}
@@ -132,12 +146,29 @@ func (i *index) load(ctx fir.RouteContext) error {
 
 // updateReading is called when the "reading" event is received.
 func (i *index) updateReading(ctx fir.RouteContext) error {
-	return ctx.Data(formatReading(lastReading))
+	reading := formatReading(lastReading)
+	return ctx.Data(reading)
 }
 
 // updateHub is called when the "hub" event is received.
 func (i *index) updateHub(ctx fir.RouteContext) error {
-	return ctx.Data(formatHubStatus(lastHubStatus))
+
+	hub := formatHubStatus(lastHubStatus)
+
+	hub["station"] = os.Getenv("STATION")
+
+	if os.Getenv("LATITUDE") != "" {
+		sunrise, _ := astral.Sunrise(observer, time.Now())
+		sunset, _ := astral.Sunset(observer, time.Now())
+
+		hub["sunrise"] = sunrise.Format("15:04")
+		hub["sunset"] = sunset.Format("15:04")
+	} else {
+		hub["sunrise"] = ""
+		hub["sunset"] = ""
+	}
+
+	return ctx.Data(hub)
 }
 
 // initUDPListener creates a UDP listener on port 50222.
@@ -191,14 +222,23 @@ func since(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	arg.MustParse(&willowParams)
-
 	initUDPListener()
 	defer conn.Close()
 
-	if willowParams.DbPath != "" {
+	if os.Getenv("DB_PATH") != "" {
 		db = initDB(os.Getenv("DB_PATH"))
 		defer db.Close()
+	}
+
+	if os.Getenv("LATITUDE") != "" {
+		latitude, _ = strconv.ParseFloat(os.Getenv("LATITUDE"), 64)
+		longitude, _ = strconv.ParseFloat(os.Getenv("LONGITUDE"), 64)
+		elevation, _ = strconv.ParseFloat(os.Getenv("ELEVATION"), 64)
+		observer = astral.Observer{
+			Latitude:  latitude,
+			Longitude: longitude,
+			Elevation: elevation,
+		}
 	}
 
 	pubsubAdapter := pubsub.NewInmem()
@@ -213,20 +253,20 @@ func main() {
 
 	http.Handle("/prefs", controller.RouteFunc(prefs))
 
-	if willowParams.DbPath != "" {
+	if os.Getenv("DB_PATH") != "" {
 		http.Handle("/charts", controller.RouteFunc(charts))
 		http.HandleFunc("/since", since)
 	}
 
-	if willowParams.SeekritToken == "" {
+	if os.Getenv("SEEKRIT_TOKEN") == "" {
 		http.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
 			token := r.URL.Query().Get("token")
-			secretToken := willowParams.SeekritToken
+			secretToken := os.Getenv("SEEKRIT_TOKEN")
 
 			if token == secretToken {
 				slog.Info("Shutting down...")
 				conn.Close()
-				if willowParams.DbPath != "" {
+				if os.Getenv("DB_PATH") != "" {
 					db.Close()
 				}
 				os.Exit(0)
@@ -236,5 +276,5 @@ func main() {
 		})
 	}
 
-	http.ListenAndServe("0.0.0.0:"+willowParams.ListenPort, nil)
+	http.ListenAndServe("0.0.0.0:"+os.Getenv("PORT"), nil)
 }

@@ -4,10 +4,9 @@ go 1.21.1
 
 require (
 	github.com/livefir/fir v0.4.1
+	github.com/sj14/astral v0.2.0
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 )
-
-require github.com/alexflint/go-scalar v1.2.0 // indirect
 
 require (
 	github.com/13rac1/goldmark-embed v0.0.0-20201220231550-e6806f2de66a // indirect
@@ -16,7 +15,6 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.12.0 // indirect
-	github.com/alexflint/go-arg v1.4.3
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
