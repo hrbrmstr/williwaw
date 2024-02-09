@@ -85,14 +85,14 @@
       </div>
       <section style="border: 1px solid transparent;">
         <div class="flex-container" id="weather-data">
-          <tempest-reading id="temp" title="Temperature" reading='{{ .temp  }}'></tempest-reading>
-          <tempest-reading id="humid" title="Humidity" reading='{{ .humid }}'></tempest-reading>
-          <tempest-reading id="press" title="Pressure" reading='{{ .press }}'></tempest-reading>
-          <tempest-reading id="lumos" title="Illuminance" reading='{{ .lumos }}'></tempest-reading>
-          <tempest-reading id="insol" title="Insolation" reading='{{ .insol }}'></tempest-reading>
-          <tempest-reading id="ultra" title="U/V Index" reading='{{ .ultra }}'></tempest-reading>
-          <tempest-reading id="wind" title="Wind Avg." reading='{{ .wind  }}'></tempest-reading>
-          <tempest-reading id="wdir" title="Whence" reading='{{ .wdir  }}'></tempest-reading>
+          <tempest-reading id="temp" header="Temperature" title="Temperature: {{ .temp  }}" reading='{{ .temp  }}'></tempest-reading>
+          <tempest-reading id="humid" header="Humidity" title="Humidity: {{ .humid }}" reading='{{ .humid }}'></tempest-reading>
+          <tempest-reading id="press" header="Pressure" title="Pressure: {{ .press }}" reading='{{ .press }}'></tempest-reading>
+          <tempest-reading id="lumos" header="Illuminance" title="Illuminance: {{ .lumos }}" reading='{{ .lumos }}'></tempest-reading>
+          <tempest-reading id="insol" header="Insolation" title="Insolation: {{ .insol }}" reading='{{ .insol }}'></tempest-reading>
+          <tempest-reading id="ultra" header="U/V Index" title="U/V Index: {{ .ultra }}" reading='{{ .ultra }}'></tempest-reading>
+          <tempest-reading id="wind" header="Wind Avg." title="Wind Avg.: {{ .wind  }}" reading='{{ .wind  }}'></tempest-reading>
+          <tempest-reading id="wdir" header="Whence" title="Whence: {{ .wdir  }}" reading='{{ .wdir  }}'></tempest-reading>
         </div>
       </section>
       {{ end }}
@@ -260,6 +260,11 @@ svg {
   padding-right: 3px;
 }
 
+.sup {
+  vertical-align: super; 
+  font-size: 9pt;
+}
+
 .reading-box {
   display: flex;
   justify-content: center;
@@ -281,7 +286,7 @@ svg {
       static get properties() {
         return {
           id: { type: String },
-          title: { type: String },
+          header: { type: String },
           reading: { type: String },
         };
       }
@@ -295,21 +300,21 @@ svg {
           let value = +this.reading
           value = tempUnits == "Fahrenheit" ? value * 1.8 + 32 : value
           value = value.toFixed(1)
-          return html`${value}<span style='vertical-align: super; font-size: 9pt;'>°${symbol}</span>`
+          return html`${value}<span class='sup'>°${symbol}</span>`
         } else if (this.id === "press") {
           const pressureUnits = localStorage.getItem("tempestwx:Pressure Units") ?? "mb"
           const symbol = pressureUnits == "mb" ? "mb" : "inHg"
           let value = +this.reading
           value = pressureUnits === "inHg" ? (value * 0.02953).toFixed(2) : value.toLocaleString()
-          return html`${value}<span style='vertical-align: super; font-size: 9pt;'>${symbol}</span>`
+          return html`${value}<span class='sup'>${symbol}</span>`
         } else if (this.id === "wind") {
           const windUnits = localStorage.getItem("tempestwx:Wind Units") ?? "mph"
           const symbol = windUnits == "mph" ? "mph" : "kph"
           let value = +this.reading
           value = windUnits == "mph" ? (value * 2.236936).toFixed(1) : value.toFixed(1)
-          return html`${value}<span style='vertical-align: super; font-size: 9pt;'>${symbol}</span>`
+          return html`${value}<span class='sup'>${symbol}</span>`
         } else if (this.id === "insol") {
-          return html`${this.reading}<span style='font-size:9pt'> W/m^2</span>`
+          return html`${this.reading}<span class='sup'>W/m^2</span>`
         }
         return unsafeHTML(this.reading)
       }
@@ -320,7 +325,7 @@ svg {
           <div>
             <h4>
               ${unsafeSVG(svgtrans[this.id])}
-              ${this.title}
+              ${this.header}
             </h4>
             <p>${this.readingValue()}</p>
           </div>
