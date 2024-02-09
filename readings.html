@@ -27,38 +27,26 @@
       min-height: 100vh;
     }
 
-    .flex-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      z-index: 1000;
-      visibility: visible;
-      gap: 20px;         /* This creates the margins between boxes */
-      padding: 20px;     /* This creates padding around the container */
-      width: 90vw;       /* This makes the container fill 90% of the viewport width */
-      max-width: 1200px; /* This sets a maximum width for the container */
-    }
-
     .station-bar {
-      position: fixed;      /* Makes the div stay in place */
-      bottom: 0;            /* Aligns the div to the bottom of the window */
-      left: 0;              /* Aligns the div to the left of the window */
-      width: 100%;          /* Ensures the div spans the full width of the window */
-      height: 50px;         /* Adjust the height as needed */
-      text-align: center;   /* Centers the text inside the status bar */
-      line-height: 50px;    /* Vertically centers the text (should match height) */
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      text-align: center;
+      line-height: 50px;
       padding-bottom: 10px;
       font-family: 'Space Mono', monospace;
     }
 
     .hub-bar {
-      position: fixed;    /* Makes the div stay in place */
-      top: 0;             /* Aligns the div to the top of the window */
-      left: 0;            /* Aligns the div to the left of the window */
-      width: 100%;        /* Ensures the div spans the full width of the window */
-      height: 100px;       /* Adjust the height as needed */
-      text-align: center; /* Centers the text inside the status bar */
-      line-height: 24px;  /* Vertically centers the text (should match height) */
+      position: fixed; 
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      text-align: center;
+      line-height: 24px;
       font-family: 'Space Mono', monospace;
       font-size: 12pt;
     }
@@ -68,10 +56,19 @@
       min-height: 140px;
     }
 
-    @media (prefers-color-scheme: light) {
-      .flex-item {
-        border: 1px solid black;
-      }
+    .readings-div {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      justify-content: center;
+      align-content: center;
+      gap: 20px;
+    }
+
+    tempest-reading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
   </style>
 </head>
@@ -81,10 +78,15 @@
     <div @fir:reading:ok::readings-update.window="$fir.replace()">
       {{ block "readings-update" . }}
       <div class="station-bar">
-        <tempest-status serial="{{ .serial }}" batt="{{ .batt }}" when="{{ .when }}" path="/prefs"></tempest-status>
+        <tempest-status 
+          serial="{{ .serial }}" 
+          batt="{{ .batt }}" 
+          when="{{ .when }}" 
+          path="/prefs"
+        ></tempest-status>
       </div>
-      <section style="border: 1px solid transparent;">
-        <div class="flex-container" id="weather-data">
+      <section>
+        <div class="readings-div" id="weather-data">
           <tempest-reading id="temp" header="Temperature" title="Temperature: {{ .temp  }}" reading='{{ .temp  }}'></tempest-reading>
           <tempest-reading id="humid" header="Humidity" title="Humidity: {{ .humid }}" reading='{{ .humid }}'></tempest-reading>
           <tempest-reading id="press" header="Pressure" title="Pressure: {{ .press }}" reading='{{ .press }}'></tempest-reading>
@@ -276,8 +278,8 @@ svg {
   align-items: center;
   min-width: 140px;
   min-height: 140px;
-  height: 140px;     /* Set the height of the boxes */
-  width: 140px;      /* Set the width of the boxes */
+  height: 140px;
+  width: 140px;
   border: 1px solid white;
   border-radius: 6%;
 }
@@ -286,7 +288,14 @@ svg {
   text-align: center;
   font-size: 1.5rem;
   font-family: 'Space Mono', monospace
-}`
+}
+
+@media (prefers-color-scheme: light) {
+  .reading-box {
+    border: 1px solid black;
+  }
+}
+`
       
       static get properties() {
         return {
