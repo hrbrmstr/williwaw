@@ -108,6 +108,7 @@
         sunrise="{{ .sunrise }}" 
         sunset="{{ .sunset }}" 
         path="/charts"
+        maps="/maps"
       ></hub-status>
       {{ end }}
     </div>
@@ -158,6 +159,7 @@
           uptime: { type: String },
           firmware: { type: String },
           path: { type: String },
+          maps: { type: String },
           sunrise: { type: String },
           sunset: { type: String },
           station: { type: String },
@@ -171,6 +173,7 @@
         this.uptime = ""
         this.firmware = ""
         this.path = ""
+        this.maps = ""
         this.sunrise = ""
         this.sunset = ""
         this.station = ""
@@ -184,7 +187,8 @@
   ⌚️ ${getNow()} 
   🧭 ${this.station}
   ${unsafeSVG(sunrise)} ${this.sunrise}
-  ${unsafeSVG(sunset)} ${this.sunset}</p>
+  ${unsafeSVG(sunset)} ${this.sunset}
+  <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.maps}">🗺️</a></p>
 `
         }
         return html`
@@ -193,7 +197,8 @@
   🧭 ${this.station}
   ${unsafeSVG(sunrise)} ${this.sunrise}
   ${unsafeSVG(sunset)} ${this.sunset}
-  <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a></p>
+  <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.path}">📈</a>
+  <a class="gear" href="${window.location.href.replace(/\/$/, "")}${this.maps}">🗺️</a></p>
 `
       }
     }

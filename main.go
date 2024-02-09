@@ -112,6 +112,17 @@ func charts() fir.RouteOptions {
 	}
 }
 
+// /maps route handler
+func maps() fir.RouteOptions {
+	return fir.RouteOptions{
+		fir.ID("maps"),
+		fir.Content("maps.html"),
+		fir.OnLoad(func(ctx fir.RouteContext) error {
+			return ctx.Data(map[string]any{})
+		}),
+	}
+}
+
 // load is called when the page is loaded.
 func (i *index) load(ctx fir.RouteContext) error {
 	reading := formatReading(lastReading)
@@ -252,6 +263,8 @@ func main() {
 	http.Handle("/", SetUserId(controller.Route(NewWxIndex(pubsubAdapter))))
 
 	http.Handle("/prefs", controller.RouteFunc(prefs))
+
+	http.Handle("/maps", controller.RouteFunc(maps))
 
 	if os.Getenv("DB_PATH") != "" {
 		http.Handle("/charts", controller.RouteFunc(charts))
