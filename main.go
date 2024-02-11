@@ -210,6 +210,12 @@ func SetUserId(next http.Handler) http.Handler {
 	})
 }
 
+func now(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	res, _ := json.Marshal(lastReading)
+	w.Write(res)
+}
+
 func since(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -265,6 +271,8 @@ func main() {
 	http.Handle("/prefs", controller.RouteFunc(prefs))
 
 	http.Handle("/maps", controller.RouteFunc(maps))
+
+	http.HandleFunc("/now", now)
 
 	if os.Getenv("DB_PATH") != "" {
 		http.Handle("/charts", controller.RouteFunc(charts))
